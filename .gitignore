@@ -34,3 +34,9 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+#local copy of source ons data files
+onsdata/
+
+#virtualenv
+virtual/
