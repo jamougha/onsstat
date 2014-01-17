@@ -10,13 +10,14 @@ sockets = Sockets(app)
 def echo_socket(ws):
     matcher = namematch.get_matcher()
     while True:
-        message = str(ws.receive())
+        message = ws.receive()
         if message.startswith('get_tokens:'):
-            tokens = message[11:].split(' ')
+            tokens = filter(lambda x: x, message[11:].split(' '))
             result = matcher.match_tokens(tokens)
             message = json.dumps(result)
             ws.send(message)
-        ws.send('not understood')
+        else:
+            ws.send('not understood')
 
 @app.route('/')
 def hello():

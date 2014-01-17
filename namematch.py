@@ -8,6 +8,7 @@ class STree(object):
     Returns two sets, one of exact matches ('foo' -> 'foo') and one of
     suffix matches ('foo' -> 'foobar').
     Used by the search functionality of the website.
+    TODO: optimize this
     """
     def __init__(self, toks = None):
         self._children = defaultdict(STree)
