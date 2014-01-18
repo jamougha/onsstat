@@ -1,6 +1,7 @@
 import psycopg2
 from collections import defaultdict
 import re
+import mydb
 
 class STree(object):
     """ A Suffix Tree. Initialize with an iterable containing (cdid, [token]) tuples.
@@ -48,38 +49,28 @@ class TokenMatcher(object):
     """
     def __init__(self):
         words = re.compile('\W')
-        conn = psycopg2.connect("dbname=onsstat user=holdem password=holdem host=127.0.0.1")
-        cur = conn.cursor('foo') # because psycopg2 is ridiculous
-        try:
-            cur.execute('select cdid, name from cdids')
-            cdids = cur.fetchall()
-            self._cdid_names = {cdid:name for cdid, name in cdids}
-            tokenized = [(cdid, words.split(name.upper()))
-                         for cdid, name in self._cdid_names.items()]
-            self._suffixtree = STree(tokenized)
-        finally:
-            cur.close()
-            conn.close()
+        cdids = mydb.db_get('select cdid, name from cdids')
+        self._cdid_names = {cdid:name for cdid, name in cdids}
+        tokenized = [(cdid, words.split(name.upper()))
+                     for cdid, name in self._cdid_names.items()]
+        self._suffixtree = STree(tokenized)
 
     def match_tokens(self, tokens):
         """Find cdids with names that match the tokens.
         All tokens must be matched. Exact matches are prioritized
         over suffix matches.
+        TODO: write tests
         """
         if len(tokens) > 10:
             tokens = tokens[:10]
-        cdidsfound = [self._suffixtree.find(token) for token in tokens]
-        matches = reduce(lambda x, y: x & y, [a | b for a, b in cdidsfound])
-        exacts = [a for a, _ in cdidsfound]
-        matches = sorted(matches,
-                         key=lambda x: sum(1 for s in exacts if x in s),
+        matches_by_token = [self._suffixtree.find(token) for token in tokens]
+        matching_all = reduce(lambda x, y: x & y, [a | b for a, b in matches_by_token])
+        exacts_matches = [a for a, _ in matches_by_token]
+        matching_all = sorted(matching_all,
+                         key=lambda x: (sum(1 for s in exacts_matches if x in s), x),
                          reverse=True)
-        return [(m, self._cdid_names[m]) for m in matches]
+        return [(m, self._cdid_names[m]) for m in matching_all]
 
 _matcher = TokenMatcher()
 def get_matcher():
     return _matcher
-import time
-t0 = time.time()
-_matcher.match_tokens(['manuf', 'prod', 'pharm'])
-print(time.time() - t0)
