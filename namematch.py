@@ -3,6 +3,12 @@ from collections import defaultdict
 import re
 import mydb
 
+words = re.compile(r'[ "#&\'()-,+/:;<>=?\.!"]')
+def tokenize(s):
+    s = s.upper()
+    tokens = filter(lambda x: x, words.split(s))
+    return tokens
+
 class STree(object):
     """ A Suffix Tree. Initialize with an iterable containing (cdid, [token]) tuples.
     Takes a suffix and looks up all the cdids containing a token with that suffix.
@@ -48,10 +54,9 @@ class TokenMatcher(object):
      Finds cdids matching the tokens given to match_tokens
     """
     def __init__(self):
-        words = re.compile('\W')
         cdids = mydb.db_get('select cdid, name from cdids')
         self._cdid_names = {cdid:name for cdid, name in cdids}
-        tokenized = [(cdid, words.split(name.upper()))
+        tokenized = [(cdid, tokenize(name))
                      for cdid, name in self._cdid_names.items()]
         self._suffixtree = STree(tokenized)
 
@@ -63,6 +68,8 @@ class TokenMatcher(object):
         """
         if len(tokens) > 10:
             tokens = tokens[:10]
+        if len(tokens) == 1 and tokens[0].upper() in self._cdid_names:
+            return (token[0], self._cdid_names[token[0]])
         matches_by_token = [self._suffixtree.find(token) for token in tokens]
         matching_all = reduce(lambda x, y: x & y, [a | b for a, b in matches_by_token])
         exacts_matches = [a for a, _ in matches_by_token]

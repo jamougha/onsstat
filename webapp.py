@@ -14,19 +14,19 @@ def echo_socket(ws):
         message = ws.receive()
         response = "Impossible internal server error"
         try:
-            if message.startswith('get_tokens:'):
-                tokens = filter(lambda x: x, message[11:].split(' '))
+            if message.startswith('get_cdids:'):
+                tokens = namematch.tokenize(message[11:])
                 result = matcher.match_tokens(tokens)
-                response = json.dumps(result)
+                response = "cdids:" + json.dumps(result)
             elif message.startswith('get_datasets:'):
                 cdid = message[13:].strip()
                 datasets = mydb.db_get('select title, id from columndata, datasets where cdid = %s and dataset_id = id', [cdid])
-                response = json.dumps(datasets)
+                response = "datasets:" + json.dumps(datasets)
             elif message.startswith('get_column:'):
                 cdid, id = message[11:].strip().split()
                 data = mydb.db_get('select base_period, index_period, "column" from columndata where cdid = %s and dataset_id = %i', (cdid, int(id)))
                 assert len(data) == 1
-                response = data[0]
+                response = "column:" + data[0]
             else:
                 # TODO error logging
                 response = "Malformed request"
