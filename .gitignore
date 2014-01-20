@@ -42,3 +42,5 @@ onsdata/
 virtual/
 
 .ipynb_checkpoints/
+
+venv/

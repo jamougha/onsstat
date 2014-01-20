@@ -69,7 +69,7 @@ class TokenMatcher(object):
         if len(tokens) > 10:
             tokens = tokens[:10]
         if len(tokens) == 1 and tokens[0].upper() in self._cdid_names:
-            return (token[0], self._cdid_names[token[0]])
+            return (tokens[0], self._cdid_names[tokens[0]])
         matches_by_token = [self._suffixtree.find(token) for token in tokens]
         matching_all = reduce(lambda x, y: x & y, [a | b for a, b in matches_by_token])
         exacts_matches = [a for a, _ in matches_by_token]
