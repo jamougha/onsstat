@@ -7,7 +7,7 @@
 
 	asock.onopen = function (event) {
 		input = document.getElementById("token_input");
-		input.oninput = send_tokens
+		input.oninput = sendTokens
 	    console.log("Found server");
 	};
 
@@ -19,7 +19,7 @@
     return head;
 	}
 
-	function send_tokens(event) {
+	function sendTokens(event) {
 		input = document.getElementById("token_input");
 		if (input.value === "") {
 			clearList(CDIDHDR);
