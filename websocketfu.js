@@ -1,3 +1,6 @@
+
+// TODO refactor in to mvc
+
 (function() {
 	var CDIDHDR = 'cdids'
 	var DATASETHDR = 'datasets'
@@ -8,10 +11,10 @@
 	asock.onopen = function (event) {
 		input = document.getElementById("token_input");
 		input.oninput = sendTokens
-	    console.log("Found server");
+	  console.log("Found server");
 	};
 
-	function clearList(id) {
+	function emptyElement(id) {
 		var head = document.getElementById(id);
     while (head.firstChild) {
     	head.removeChild(head.firstChild);
@@ -22,7 +25,7 @@
 	function sendTokens(event) {
 		input = document.getElementById("token_input");
 		if (input.value === "") {
-			clearList(CDIDHDR);
+			emptyElement(CDIDHDR);
 		}
 		if (input.value.length > 1) {
 			message = JSON.stringify( {
@@ -35,12 +38,13 @@
 	}
 
 	function liClickHandler(header) {
-		return function (currentNode) {
+		return function (currentNode, lastbg) {
 			return function (node) {
 				function doClick() {
 					if (currentNode !== null) {
-						currentNode.style.background = "white";
+						currentNode.style.background = lastbg;
 					}
+					lastbg = node.style.background;
 					node.style.background = "#CCDDFF";
 					console.log(header, node.id)
 					asock.send(JSON.stringify({
@@ -51,31 +55,32 @@
 				}
 				return doClick;
 			};
-		}(null);
+		}(null, null);
 	}
 
   function handleData(data, header, handler, interpret) {
   	console.log(data, header);
 		var list = document.createElement("ul");
 		list.style.listStyle = "None";
+		var colours = ["#E9E9E9", "#FFFFDD"];
 
 		for (var i = 0; i < data.length; i++) {
 			var elem = interpret(data[i]);
 			var li = document.createElement("li");
-
+			li.style.padding = "5px"
 			li.textContent =  elem.title;
+			li.style.background = colours[i%2];
 			li.id = elem.id;
 			li.onclick = handler(li);
 			list.appendChild(li);
 		}
 
-		var head = clearList(header);
+		var head = emptyElement(header);
 	  head.style.fontSize = "small";
 		head.appendChild(list);
   };
 
 	asock.onmessage = function (event) {
-
 		message = JSON.parse(event.data);
 		switch (message.response) {
 			case CDIDHDR:
