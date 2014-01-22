@@ -75,7 +75,7 @@
     }(null, null));
   }
 
-  function handleData(data, header, handler, interpret) {
+  function listView(data, header, handler, interpret) {
     var list = document.createElement("ul");
     var colours = ["#E9E9E9", "#FFFFDD"];
     var i, elem, li;
@@ -93,30 +93,34 @@
       list.appendChild(li);
     }
 
-    var head = emptyElement(header);
-    head.style.fontSize = "small";
-    head.appendChild(list);
+    return list;
   }
 
   function receiveCDIDs(data) {
-    handleData(data, CDIDHDR, liClickHandler(DATASETHDR),
+    var head = emptyElement(CDIDHDR);
+    
+    var cdidsView = listView(data, CDIDHDR, liClickHandler(DATASETHDR),
       function (elem) {
         return {
           title: elem[1] + " (" + elem[0] + ")",
           id: elem[0]
         };
       });
+    head.appendChild(cdidsView);
   }
   router.recieve(receiveCDIDs, CDIDHDR);
 
   function receiveDatasets(data) {
-    handleData(data, DATASETHDR, liClickHandler(COLUMNHDR),
+    var head = emptyElement(DATASETHDR);
+    var datasetView = listView(data, DATASETHDR, liClickHandler(COLUMNHDR),
       function (elem) {
         return {
           title: elem[0],
           id: JSON.stringify([elem[1], elem[2]])
         };
       });
+    head.appendChild(datasetView);
+
   }
   router.recieve(receiveDatasets, DATASETHDR);
 
