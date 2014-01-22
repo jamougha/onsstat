@@ -1,19 +1,22 @@
 <html>
 <head>
 	<link rel="stylesheet" type="text/css" href="socktest.css" />
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  <script src="showdata.js"></script>
   <script src="websocketfu.js"></script>
 </head>
 <body>
 <header id="myhead">HELLO JAVASCRIPT</header>
-
-
+<div id="chart_div" style="margin-left: auto; margin-right: auto; width: 800; height: 450"></div>
 <p />
-    <input id = "token_input" style="margin: 0 auto" />
-
-<div class="datacolumn" id="cdids" style="align:left">
+<div style="margin-left: auto; margin-right: auto; width: 200px">
+    <input id = "token_input" style="width:200px; margin-left:auto; margin-right:auto" />
 </div>
 
-<div class="datacolumn" id="datasets"></div>
+<div style="margin-left: auto; margin-right: auto; width: 70%">
+    <div class="datacolumn" id="cdids" style="width: 45%; padding:2.5%"></div>
+    <div class="datacolumn" id="datasets" style="width: 45%; padding: 2.5%"></div>
+</div>
 
 
 </body>
