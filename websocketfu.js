@@ -15,7 +15,6 @@
     },
     incoming: function (event) {
       var message = JSON.parse(event.data);
-      console.log(this);
       var dest = this.routes[message.response];
       dest(message.data);
     }
@@ -75,7 +74,7 @@
     }(null, null));
   }
 
-  function listView(data, header, handler, interpret) {
+  function listView(data, handler, interpret) {
     var list = document.createElement("ul");
     var colours = ["#E9E9E9", "#FFFFDD"];
     var i, elem, li;
@@ -98,8 +97,8 @@
 
   function receiveCDIDs(data) {
     var head = emptyElement(CDIDHDR);
-    
-    var cdidsView = listView(data, CDIDHDR, liClickHandler(DATASETHDR),
+ 
+    var cdidsView = listView(data, liClickHandler(DATASETHDR),
       function (elem) {
         return {
           title: elem[1] + " (" + elem[0] + ")",
@@ -111,8 +110,41 @@
   router.recieve(receiveCDIDs, CDIDHDR);
 
   function receiveDatasets(data) {
+    var months = {
+      "January": 12,
+      "February": 11,
+      "March": 10,
+      "April": 9,
+      "May": 8,
+      "June": 7,
+      "July": 6,
+      "August": 5,
+      "September": 4,
+      "October": 3,
+      "November": 2,
+      "December": 1
+    };
+    var i, match, period;
+    var re = /(\w+)? (20\d\d)/;
+    var schwartz = [];
+    for (i = 0; i < data.length; i++) {
+      match = re.exec(data[i][0]);
+      if (match && match[1]) {
+        period = match[1];
+        if (period[0] !== 'Q') {
+          period = months[period].toString();
+        }
+        match = match[2] + match[1];
+      }
+      schwartz[i] = [match, data[i]];
+    }
+    schwartz.sort();
+    schwartz.reverse();
+    for (i = 0; i < data.length; i++) {
+      data[i] = schwartz[i][1];
+    }
     var head = emptyElement(DATASETHDR);
-    var datasetView = listView(data, DATASETHDR, liClickHandler(COLUMNHDR),
+    var datasetView = listView(data, liClickHandler(COLUMNHDR),
       function (elem) {
         return {
           title: elem[0],
@@ -120,7 +152,6 @@
         };
       });
     head.appendChild(datasetView);
-
   }
   router.recieve(receiveDatasets, DATASETHDR);
 
