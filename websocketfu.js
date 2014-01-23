@@ -5,21 +5,20 @@
   var DATASETHDR = 'datasets';
   var COLUMNHDR = 'column';
 
-  function Router() {
-    this.routes = {};
-  }
-  Router.prototype = {
-    constructor: Router,
-    recieve: function (dest, response) {
-      this.routes[response] = dest;
-    },
-    incoming: function (event) {
-      var message = JSON.parse(event.data);
-      var dest = this.routes[message.response];
-      dest(message.data);
-    }
-  };
-  var router = new Router();
+  var router = (function () {
+    var routes = {};
+    return {
+      recieve: function (dest, response) {
+        routes[response] = dest;
+      },
+      incoming: function (event) {
+        var message = JSON.parse(event.data);
+        var dest = routes[message.response];
+        dest(message.data);
+      }
+    };
+  }());
+  
   var asock = new WebSocket("ws://127.0.0.1:8000/echo");
 
   asock.onopen = function (event) {
@@ -97,8 +96,8 @@
 
   function receiveCDIDs(data) {
     var head = emptyElement(CDIDHDR);
- 
     var cdidsView = listView(data, liClickHandler(DATASETHDR),
+
       function (elem) {
         return {
           title: elem[1] + " (" + elem[0] + ")",
@@ -127,6 +126,9 @@
     var i, match, period;
     var re = /(\w+)? (20\d\d)/;
     var schwartz = [];
+
+    // sort the datasets by the date in their titles
+    // using a schwartz transform
     for (i = 0; i < data.length; i++) {
       match = re.exec(data[i][0]);
       if (match && match[1]) {
@@ -138,11 +140,13 @@
       }
       schwartz[i] = [match, data[i]];
     }
+
     schwartz.sort();
     schwartz.reverse();
     for (i = 0; i < data.length; i++) {
       data[i] = schwartz[i][1];
     }
+
     var head = emptyElement(DATASETHDR);
     var datasetView = listView(data, liClickHandler(COLUMNHDR),
       function (elem) {
