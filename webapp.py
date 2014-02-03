@@ -13,6 +13,7 @@ COLUMNHDR = u'column'
 
 @sockets.route('/echo')
 def echo_socket(ws):
+    """Handle stuff"""
     matcher = namematch.get_matcher()
     while True:
         def jsonize(response, data):
@@ -39,6 +40,7 @@ def echo_socket(ws):
             else:
                 # TODO error logging
                 response = "Malformed request " + message
+                
         except Exception as e:
             print('error in echo_socket, probably malformed request: ' + str(message) + ', ' + str(e))
             response = 'Internal server error, ending connection'
