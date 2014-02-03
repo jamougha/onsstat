@@ -5,6 +5,7 @@
   var DATASETHDR = 'datasets';
   var COLUMNHDR = 'column';
 
+<<<<<<< HEAD
   var router = (function () {
     var routes = {};
     return {
@@ -19,6 +20,23 @@
     };
   }());
   
+=======
+  function Router() {
+    this.routes = {};
+  }
+  Router.prototype = {
+    constructor: Router,
+    recieve: function (dest, response) {
+      this.routes[response] = dest;
+    },
+    incoming: function (event) {
+      var message = JSON.parse(event.data);
+      var dest = this.routes[message.response];
+      dest(message.data);
+    }
+  };
+  var router = new Router();
+>>>>>>> 62780268be582d09c6def6e1d17d14f5e3d2abf6
   var asock = new WebSocket("ws://127.0.0.1:8000/echo");
 
   asock.onopen = function (event) {
@@ -96,8 +114,13 @@
 
   function receiveCDIDs(data) {
     var head = emptyElement(CDIDHDR);
+<<<<<<< HEAD
     var cdidsView = listView(data, liClickHandler(DATASETHDR),
 
+=======
+ 
+    var cdidsView = listView(data, liClickHandler(DATASETHDR),
+>>>>>>> 62780268be582d09c6def6e1d17d14f5e3d2abf6
       function (elem) {
         return {
           title: elem[1] + " (" + elem[0] + ")",
@@ -124,11 +147,16 @@
       "December": 1
     };
     var i, match, period;
+<<<<<<< HEAD
     var re = /(\w+)? (20\d\d)/;
     var schwartz = [];
 
     // sort the datasets by the date in their titles
     // using a schwartz transform
+=======
+    var re = /(\w+)? (\d\d\d\d)/;
+    var schwartz = [];
+>>>>>>> 62780268be582d09c6def6e1d17d14f5e3d2abf6
     for (i = 0; i < data.length; i++) {
       match = re.exec(data[i][0]);
       if (match && match[1]) {
@@ -140,13 +168,19 @@
       }
       schwartz[i] = [match, data[i]];
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 62780268be582d09c6def6e1d17d14f5e3d2abf6
     schwartz.sort();
     schwartz.reverse();
     for (i = 0; i < data.length; i++) {
       data[i] = schwartz[i][1];
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 62780268be582d09c6def6e1d17d14f5e3d2abf6
     var head = emptyElement(DATASETHDR);
     var datasetView = listView(data, liClickHandler(COLUMNHDR),
       function (elem) {
