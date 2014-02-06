@@ -97,7 +97,7 @@ def links_to_filelinks(links):
         try:
             page = _geturl(link)
             flinks.append(onsdata_filelinks(page))
-        except:
+        except Exce:
             print("Failed to get file links for " + link)
     if flinks:
         return flinks
@@ -120,7 +120,7 @@ def get_world(fname = 'onsdata2/alllinks.txt', dir=onsdata2):
             csvf = _geturl(csv)
             with open('%s/%s(%d).csv' % (dir, title, i), 'w') as f:
                 f.write(csvf)
-        except:
+        except Exception:
             print("Couldn't retrieve pages for page " + link[0])
 
 

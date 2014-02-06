@@ -37,6 +37,8 @@ nosetests.xml
 
 #local copy of source ons data files
 onsdata/
+onsdata2/
+columndata.csv
 
 #virtualenv
 virtual/
