@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_sockets import Sockets
 import namematch
 import json 
@@ -15,14 +15,11 @@ COLUMNHDR = u'column'
 def fetch_data(cdid):
     columns = map(list, mydb.db_get('select * from reduced_columns where cdid = %s', [cdid]))
     for c in columns:
-        try:
-            names = mydb.db_get('''select title from datasets d
-                                   join reduced_columns rc on d.id = any(rc.datasets)
-                                   where rc.id = %s;
-                                ''', [c[2]])
-            c[1] = [name[0] for name in names]
-        except Exception as e:
-            print(e, c)
+        names = mydb.db_get('''select title from datasets d
+                               join reduced_columns rc on d.id = any(rc.datasets)
+                               where rc.id = %s;
+                            ''', [c[2]])
+        c[1] = [n[0] for n in names]
     return json.dumps(columns)
 
 
@@ -66,4 +63,4 @@ def echo_socket(ws):
 
 @app.route('/')
 def hello():
-    return 'Hello World!'
+    return render_template('datasets.html')

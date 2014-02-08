@@ -2,22 +2,19 @@
 
 <html lang="en">
 <head>
-  {% block head %}
+    {% block head %}
   <meta charset="utf-8">
   <title>Totally Awesome Webpage</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}" type="text/css" />
+  <link rel="stylesheet" href="main.css" type="text/css" />
   <!--[if lt IE 9]>
   <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
   <![endif]-->
   {% endblock %}
 </head>
 <body>
-    <div class="head" >
-        <hgroup>
-        <H1>UKSTAT</H1>
-        <h3>Beautiful data from Britain</H3>
+    <div id="heading">
+
     </div>
-    {% block content %}    
-    {% endblock %}
+    
 </body>
 </html>

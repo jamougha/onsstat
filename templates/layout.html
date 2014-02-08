@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  {% block head %}
+  <meta charset="utf-8">
+  <title>UKSTAT</title>
+
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  <script src="{{ url_for('static', filename='showdata.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}" type="text/css" />
+  <script src="{{ url_for('static', filename='websocketfu.js') }}"></script>
+  <!--[if lt IE 9]>
+  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  {% endblock %}
+</head>
+<body>
+    <div class="body">
+        <div class="uberhead">
+            <div class="head" >
+                <h1>UKSTAT</h1>
+                <span class="underhead">Nerding for Britain</span>        
+            </div>
+            <ul id = navigation>
+                <li class = "headlink">Datasets</li>
+                <li class = "headlink">About</li>
+                <li class = "headlink">Github</li>
+            </ul>
+        </div>
+        {% block content %}    
+        {% endblock %}
+    </div>
+</body>
+</html>

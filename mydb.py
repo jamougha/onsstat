@@ -15,4 +15,3 @@ def db_get(query, values=None):
     finally:
         cur.close()
         conn.close()
-

@@ -5,7 +5,6 @@
   var DATASETHDR = 'datasets';
   var COLUMNHDR = 'column';
 
-<<<<<<< HEAD
   var router = (function () {
     var routes = {};
     return {
@@ -20,7 +19,6 @@
     };
   }());
   
-=======
   function Router() {
     this.routes = {};
   }
@@ -36,7 +34,7 @@
     }
   };
   var router = new Router();
->>>>>>> 62780268be582d09c6def6e1d17d14f5e3d2abf6
+
   var asock = new WebSocket("ws://127.0.0.1:8000/echo");
 
   asock.onopen = function (event) {
@@ -79,7 +77,7 @@
             currentNode.style.background = lastbg;
           }
           lastbg = node.style.background;
-          node.style.background = "#CCDDFF";
+          node.style.background = "#FFCC88";
           asock.send(JSON.stringify({
             request: header,
             data: node.id
@@ -93,7 +91,8 @@
 
   function listView(data, handler, interpret) {
     var list = document.createElement("ul");
-    var colours = ["#E9E9E9", "#FFFFDD"];
+    list.style.id="cdid_ul"
+    var colours = ["#FFFFFF", "#DDEEFF"];
     var i, elem, li;
 
     list.style.listStyle = "None";
@@ -114,13 +113,7 @@
 
   function receiveCDIDs(data) {
     var head = emptyElement(CDIDHDR);
-<<<<<<< HEAD
     var cdidsView = listView(data, liClickHandler(DATASETHDR),
-
-=======
- 
-    var cdidsView = listView(data, liClickHandler(DATASETHDR),
->>>>>>> 62780268be582d09c6def6e1d17d14f5e3d2abf6
       function (elem) {
         return {
           title: elem[1] + " (" + elem[0] + ")",
@@ -147,16 +140,11 @@
       "December": 1
     };
     var i, match, period;
-<<<<<<< HEAD
     var re = /(\w+)? (20\d\d)/;
-    var schwartz = [];
 
     // sort the datasets by the date in their titles
     // using a schwartz transform
-=======
-    var re = /(\w+)? (\d\d\d\d)/;
     var schwartz = [];
->>>>>>> 62780268be582d09c6def6e1d17d14f5e3d2abf6
     for (i = 0; i < data.length; i++) {
       match = re.exec(data[i][0]);
       if (match && match[1]) {
@@ -168,19 +156,11 @@
       }
       schwartz[i] = [match, data[i]];
     }
-<<<<<<< HEAD
-
-=======
->>>>>>> 62780268be582d09c6def6e1d17d14f5e3d2abf6
     schwartz.sort();
     schwartz.reverse();
     for (i = 0; i < data.length; i++) {
       data[i] = schwartz[i][1];
     }
-<<<<<<< HEAD
-
-=======
->>>>>>> 62780268be582d09c6def6e1d17d14f5e3d2abf6
     var head = emptyElement(DATASETHDR);
     var datasetView = listView(data, liClickHandler(COLUMNHDR),
       function (elem) {
