@@ -3,13 +3,13 @@ import datacache
 from nose.tools import raises
 
 def dataset_title_test():
-    """dataset ids should map correctly"""
+    """Dataset ids should map correctly."""
     cache = datacache.cache()
     assert cache.dataset_title(1) == "Preliminary Estimate of GDP - Time Series Dataset Q3 2013 - ONS"
     assert cache.dataset_title(99) == "Aerospace and Electronics Cost Indices, July 2012 Dataset - ONS"
 
 def title_inclusion_test():
-    """shold be no gaps in the datasets"""
+    """There should be no gaps in the datasets."""
     cache = datacache.cache()
     for i in range(642):
         if i != 579: #oops
@@ -17,9 +17,9 @@ def title_inclusion_test():
 
 @raises(KeyError)
 def test_dataset_keyerror():
-    """only so many datasets"""
+    """There are only so many datasets"""
     cache = datacache.cache()
-    cache.dataset_title(1000000)
+    cache.dataset_title(1000)
 
 def test_cdid_info():
     cache = datacache.cache()
@@ -34,10 +34,21 @@ def test_cdid_info():
 
     nmoe_info = cache.cdid_info('NMOE')
     found = {(tuple(a), b) for a, b in nmoe_info}
-    
+
     assert expected == found
         
+def test_titles_and_ids():
+    cache = datacache.cache()
+    ti = cache.titles_and_ids('A2FE')
 
+    titles = set(ti[0][0])
+    expected = set([
+        "MQ5: Investment by Insurance Companies, Pension Funds and Trusts, Time Series Data, Q2 2012 - ONS",
+        "MQ5: Investment by Insurance Companies, Pension Funds and Trusts, Time Series Data, Q3 2012 - ONS",
+        "MQ5: Investment by Insurance Companies, Pension Funds and Trusts, Q4 2011 - Time Series Data - ONS"])
+
+    expect_title = "MQ5: Investment by Insurance Companies, Pension Funds and Trusts, Time Series Data, Q2 2012 - ONS"
+    assert len(titles) == 11 and expected < titles and ti[0][1] == 37669
 
 
 
