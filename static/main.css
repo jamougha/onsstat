@@ -26,6 +26,12 @@
     color: #4D7AC8;
     text-align: center;
 }
+
+.navlink {
+    color: black;
+    text-decoration: None;
+}
+
 #navigation {
     list-style: none;
     float: right;
@@ -44,12 +50,16 @@
     width: 1000px;
 }
 
+.abouttext {
+    width: 700px;
+    margin: 40px;
+}
 .input {
     margin: 10px auto 0px auto;
     width: 200px;
 }
 .chart {
-    width: 650px;
+    width: 850px;
 }
 #cdids {
     width: 50%;

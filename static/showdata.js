@@ -31,8 +31,8 @@ var drawChart = (function (first) {
 
     // Set chart options
     var options = {'title': 'Some Graph',
-                   'width': 600,
-                   'height': 340};
+                   'width': 800,
+                   'height': 450};
 
     // Instantiate and draw our chart, passing in some options.
     var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
