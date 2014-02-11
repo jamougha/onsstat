@@ -19,7 +19,6 @@ var drawChart = (function (first) {
 
     if (first) {
         first = false;
-        console.log("firt!");
     } else {
         column = column[0];
     }

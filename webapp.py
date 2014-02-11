@@ -1,45 +1,60 @@
+from __future__ import print_function
 from flask import Flask, render_template
 from flask_sockets import Sockets
 import namematch
 import json 
 import mydb
+import datacache
+from concurrent.futures import ThreadPoolExecutor
+import time
+import itertools as it
 
 app = Flask(__name__)
 sockets = Sockets(app)
 
-CDIDHDR = u'cdids'
-DATASETHDR = u'datasets'
-COLUMNHDR = u'column'
+@app.route('/fetchcolumn/<column_id>')
+def fetch_column(column_id):
+    column_id = int(column_id)
+    datacolumn = mydb.db_get('select datacolumn from reduced_columns where id = %s', [column_id])
+    return json.dumps(datacolumn)
 
-@app.route('/fetchcolumn/<int:cdid>')
-def fetch_column(cdid):
-    
+def chunkify(ls, size = 30):
+    for i in range(0, len(ls), size):
+        yield it.islice(ls, i, i + size)
 
-
-
-@sockets.route('/echo')
+@sockets.route('/tokenmatcher')
 def echo_socket(ws):
-    """Search for cdids that match the given tokens."""
+    """Search for cdids that match the given tokens.
+    The query may return several thousand results, so rather than
+    doing it all at once it's broken up into chunks. After each
+    chunk is sent we check for a new message, abandoning the current 
+    query if one is found.
+    """
     matcher = namematch.get_matcher()
-    while True:
-        msg_id, cdid = json.loads(ws.receive())
+    cache = datacache.cache()
 
-        tokens = namematch.tokenize(message)
-        cdids = matcher.match_tokens(tokens)
-        cdids.sort(key=lambda x: len(x[1]))
-        columns = []
-        for cdid, name in cdids:
-            redcol_ids = mydb.db_get('select id from reduced_columns where cdid = %s', [cdid])
-            for id in redcol_ids:
-                titles = mydb.db_get('''select title from datasets d
-                                    join reduced_columns rc on d.id = any(rc.datasets)
-                                    where rc.id = %s''',
-                                    id)
-                columns.append(dict(cdid=cdid, name=name, datasets=titles, id=id))
-            
-        response = json.dumps(columns)
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        received = ex.submit(ws.receive)
 
-        ws.send(msg_id, response)
+        while True:
+            ident, message = json.loads(received.result())
+            received = ex.submit(ws.receive)
+            if not message: 
+                continue
+
+            tokens = namematch.tokenize(message)
+            cdids = matcher.match_tokens(tokens)
+
+            for chunk in chunkify(cdids):
+                chunklookup = cache.map_lkup(chunk)
+                response = [ident, chunklookup]
+                ws.send(json.dumps(response))
+
+                time.sleep(0)
+                if received.done():
+                    break
+
+
 
 @app.route('/about')
 def about():

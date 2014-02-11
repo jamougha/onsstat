@@ -62,8 +62,9 @@
     width: 850px;
 }
 #cdids {
-    width: 50%;
+    width: 100%;
     float: left;
+    list-style: None;
 }
 #datasets {
     width: 40%;

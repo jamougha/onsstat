@@ -1,49 +1,18 @@
 
 // TODO refactor in to mvc
 (function () {
+  
   var CDIDHDR = 'cdids';
   var DATASETHDR = 'datasets';
   var COLUMNHDR = 'column';
 
-  var router = (function () {
-    var routes = {};
-    return {
-      recieve: function (dest, response) {
-        routes[response] = dest;
-      },
-      incoming: function (event) {
-        var message = JSON.parse(event.data);
-        var dest = routes[message.response];
-        dest(message.data);
-      }
-    };
-  }());
-  
-  function Router() {
-    this.routes = {};
-  }
-  Router.prototype = {
-    constructor: Router,
-    recieve: function (dest, response) {
-      this.routes[response] = dest;
-    },
-    incoming: function (event) {
-      var message = JSON.parse(event.data);
-      var dest = this.routes[message.response];
-      dest(message.data);
-    }
-  };
-  var router = new Router();
-
-  var asock = new WebSocket("ws://127.0.0.1:8000/echo");
+  var asock = new WebSocket("ws://127.0.0.1:8000/tokenmatcher");
 
   asock.onopen = function (event) {
     var input = document.getElementById("token_input");
     input.oninput = sendTokens;
     console.log("Found server");
-    asock.onmessage = function (event) {
-      router.incoming(event);
-    };
+    asock.onmessage = receiveCDIDs
   };
 
   function emptyElement(id) {
@@ -54,18 +23,18 @@
     return head;
   }
 
+  var numsent = 0;
   function sendTokens(event) {
+
     var input = document.getElementById("token_input");
     if (input.value === "") {
       emptyElement(CDIDHDR);
     }
     if (input.value.length > 1) {
-      var message = JSON.stringify({
-        request: CDIDHDR,
-        data: input.value
-      });
-      console.log(message);
-      asock.send(message);
+      var message = input.value;
+      asock.send(JSON.stringify([numsent++, message]));
+    } else {
+      asock.send([numsent++, ""])
     }
   }
 
@@ -88,15 +57,11 @@
       };
     }(null, null));
   }
-
   function listView(data, handler, interpret) {
-    var list = document.createElement("ul");
-    list.style.id="cdid_ul"
     var colours = ["#FFFFFF", "#DDEEFF"];
     var i, elem, li;
 
-    list.style.listStyle = "None";
-
+    var lis = [];
     for (i = 0; i < data.length; i++) {
       elem = interpret(data[i]);
       li = document.createElement("li");
@@ -105,24 +70,42 @@
       li.style.background = colours[i % 2];
       li.id = elem.id;
       li.onclick = handler(li);
-      list.appendChild(li);
+      lis.push(li);
     }
 
-    return list;
+    return lis;
   }
-
+  var lastIdent = -1;
   function receiveCDIDs(data) {
-    var head = emptyElement(CDIDHDR);
-    var cdidsView = listView(data, liClickHandler(DATASETHDR),
+    // console.log((new Date() - timing_data.timesent[timing_data.numrecv++])/1000);
+    // console.log(new Date() - lastrecv);
+
+    // console.log(data);
+    var message = JSON.parse(data.data);
+
+    var ident = message[0];
+    var contents = message[1];
+    var head = document.getElementById(CDIDHDR);
+    if (lastIdent != ident) {
+      while (head.firstChild) {
+        head.removeChild(head.firstChild);
+      }
+      lastIdent = ident;
+    }
+
+    var cdidsView = listView(contents, liClickHandler(DATASETHDR),
       function (elem) {
         return {
-          title: elem[1] + " (" + elem[0] + ")",
-          id: elem[0]
+          title: elem.name + " (" + elem.cdid + ", " + elem.column_id + ")",
+          id: elem.column_id
         };
       });
-    head.appendChild(cdidsView);
+
+    var i = 0;
+    for (; i < cdidsView.length; i++) {
+      head.appendChild(cdidsView[i]);
+    }
   }
-  router.recieve(receiveCDIDs, CDIDHDR);
 
   function receiveDatasets(data) {
     var months = {
@@ -171,11 +154,11 @@
       });
     head.appendChild(datasetView);
   }
-  router.recieve(receiveDatasets, DATASETHDR);
+  
 
   function receiveColumn(data) {
     drawChart(JSON.parse(data[2]));
   }
-  router.recieve(receiveColumn, COLUMNHDR);
+  
 
 }());

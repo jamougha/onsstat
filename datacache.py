@@ -41,6 +41,15 @@ class Datacache(object):
             result.append((titles, d_id))
         return result
 
+    def map_lkup(self, chunk):
+        columns = []
+        for cdid, name in chunk:
+            for  datasets, col_id in self.titles_and_ids(cdid):
+                columns.append(dict(cdid=cdid, name=name, 
+                                    datasets=datasets, column_id=col_id))
+
+        return columns
+
 _cache = Datacache(_DB_CONNECT_STR)
 def cache():
     return _cache

@@ -47,7 +47,6 @@ def test_titles_and_ids():
         "MQ5: Investment by Insurance Companies, Pension Funds and Trusts, Time Series Data, Q3 2012 - ONS",
         "MQ5: Investment by Insurance Companies, Pension Funds and Trusts, Q4 2011 - Time Series Data - ONS"])
 
-    expect_title = "MQ5: Investment by Insurance Companies, Pension Funds and Trusts, Time Series Data, Q2 2012 - ONS"
     assert len(titles) == 11 and expected < titles and ti[0][1] == 37669
 
 
