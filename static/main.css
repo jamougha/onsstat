@@ -66,11 +66,16 @@
     float: left;
     list-style: None;
 }
-#datasets {
-    width: 40%;
-    float: left;
+.data {
+    width: 60%;
+    margin: 15px 60px;
+    padding: 30px;
+    border: dotted gray 1px;
+    overflow: hidden;
 }
-#cdid_ul {
-    border: solid gray 1px;
+ul {
+    transition: background 1s;
+    list-style: none;
+    padding-left: 0px;
     padding-start: 0px;
 }

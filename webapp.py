@@ -15,10 +15,10 @@ sockets = Sockets(app)
 @app.route('/fetchcolumn/<column_id>')
 def fetch_column(column_id):
     column_id = int(column_id)
-    datacolumn = mydb.db_get('select datacolumn from reduced_columns where id = %s', [column_id])
-    return json.dumps(datacolumn)
+    datacolumn, = mydb.db_get('select datacolumn from reduced_columns where id = %s', [column_id])
+    return datacolumn
 
-def chunkify(ls, size = 30):
+def chunkify(ls, size = 50):
     for i in range(0, len(ls), size):
         yield it.islice(ls, i, i + size)
 
@@ -44,6 +44,8 @@ def echo_socket(ws):
 
             tokens = namematch.tokenize(message)
             cdids = matcher.match_tokens(tokens)
+            if len(cdids) == 0:
+                ws.send(json.dumps([ident, []]))
 
             for chunk in chunkify(cdids):
                 chunklookup = cache.map_lkup(chunk)
@@ -54,7 +56,7 @@ def echo_socket(ws):
                 if received.done():
                     break
 
-
+            ws.send(json.dumps([ident, "end"]))
 
 @app.route('/about')
 def about():

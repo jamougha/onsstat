@@ -6,38 +6,6 @@
   var DATASETHDR = 'datasets';
   var COLUMNHDR = 'column';
 
-  var asock = new WebSocket("ws://127.0.0.1:8000/tokenmatcher");
-
-  asock.onopen = function (event) {
-    var input = document.getElementById("token_input");
-    input.oninput = sendTokens;
-    console.log("Found server");
-    asock.onmessage = receiveCDIDs
-  };
-
-  function emptyElement(id) {
-    var head = document.getElementById(id);
-    while (head.firstChild) {
-      head.removeChild(head.firstChild);
-    }
-    return head;
-  }
-
-  var numsent = 0;
-  function sendTokens(event) {
-
-    var input = document.getElementById("token_input");
-    if (input.value === "") {
-      emptyElement(CDIDHDR);
-    }
-    if (input.value.length > 1) {
-      var message = input.value;
-      asock.send(JSON.stringify([numsent++, message]));
-    } else {
-      asock.send([numsent++, ""])
-    }
-  }
-
   function liClickHandler(header) {
     return (function (currentNode, lastbg) {
       return function (node) {
@@ -47,118 +15,112 @@
           }
           lastbg = node.style.background;
           node.style.background = "#FFCC88";
-          asock.send(JSON.stringify({
-            request: header,
-            data: node.id
-          }));
+          var data = $.get('/fetchcolumn/' + node.id, function () { drawChart(JSON.parse(data.responseText)[0]) })
+          var selectedNode = node.cloneNode();
+          selectedNode._node = node;
+          selectedNode._data = data;
+          selectedNode.visiblity = 'hidden';
+          console.log(selectedNode._element);
+          $(node).fadeOut(1000);
+          var selectList = $('#chosen');
+          selectList.append(selectedNode);
           currentNode = node;
         }
         return doClick;
       };
     }(null, null));
   }
-  function listView(data, handler, interpret) {
-    var colours = ["#FFFFFF", "#DDEEFF"];
+
+  function listView(buffer) {
+    var ul = document.createElement('ul');
+    ul.style.listStyle = 'None';
+    ul.style.paddingLeft = '0px';
+    ul.style.marginBottom = '0px';
+    ul.style.paddingBottom = '0px';
+    ul.style.paddingStart = '0px';
+    ul.style.paddingEnd = '0px';
+    var i;
+    for (i = 0; i < buffer.length; i++) {
+      $(ul).append(buffer[i]);
+    }
+
+    return ul;
+  }
+
+  function elementView(data, handler, buffer) {
     var i, elem, li;
 
-    var lis = [];
     for (i = 0; i < data.length; i++) {
-      elem = interpret(data[i]);
+      elem = data[i];
       li = document.createElement("li");
+      var title = elem.name + " (" + elem.cdid + ", " + elem.column_id + ")";
       li.style.padding = "5px";
-      li.textContent =  elem.title;
-      li.style.background = colours[i % 2];
-      li.id = elem.id;
+      li.textContent = title;
+      li.style.borderBottom = 'dotted gray 1px'
+      li.id = elem.column_id;
+      li._element = elem
       li.onclick = handler(li);
-      lis.push(li);
+      buffer.push(li);
+    }
+  }
+
+  var numsent = 0;
+  function sendTokens(event) {
+    var input = document.getElementById("token_input"),
+        message = false;
+
+    if (input.value === "") {
+      $('#cdids').empty();
     }
 
-    return lis;
+    if (input.value.length > 1) {
+      var message = input.value;
+    }
+
+    asock.send(JSON.stringify([++numsent, message]));
   }
-  var lastIdent = -1;
-  function receiveCDIDs(data) {
-    // console.log((new Date() - timing_data.timesent[timing_data.numrecv++])/1000);
-    // console.log(new Date() - lastrecv);
 
-    // console.log(data);
-    var message = JSON.parse(data.data);
+  var receiveCDIDs = (function (lastIdent, buffer) {
+    return function (data) {
+      var head = $('#cdids');
 
-    var ident = message[0];
-    var contents = message[1];
-    var head = document.getElementById(CDIDHDR);
-    if (lastIdent != ident) {
-      while (head.firstChild) {
-        head.removeChild(head.firstChild);
+      var message = JSON.parse(data.data);
+      var ident = message[0];
+      var contents = message[1];
+
+      if (ident < numsent) {
+        buffer = [];
+        return;
       }
-      lastIdent = ident;
-    }
 
-    var cdidsView = listView(contents, liClickHandler(DATASETHDR),
-      function (elem) {
-        return {
-          title: elem.name + " (" + elem.cdid + ", " + elem.column_id + ")",
-          id: elem.column_id
-        };
-      });
-
-    var i = 0;
-    for (; i < cdidsView.length; i++) {
-      head.appendChild(cdidsView[i]);
-    }
-  }
-
-  function receiveDatasets(data) {
-    var months = {
-      "January": 12,
-      "February": 11,
-      "March": 10,
-      "April": 9,
-      "May": 8,
-      "June": 7,
-      "July": 6,
-      "August": 5,
-      "September": 4,
-      "October": 3,
-      "November": 2,
-      "December": 1
-    };
-    var i, match, period;
-    var re = /(\w+)? (20\d\d)/;
-
-    // sort the datasets by the date in their titles
-    // using a schwartz transform
-    var schwartz = [];
-    for (i = 0; i < data.length; i++) {
-      match = re.exec(data[i][0]);
-      if (match && match[1]) {
-        period = match[1];
-        if (period[0] !== 'Q') {
-          period = months[period].toString();
+      if (contents === 'end') {
+        if (buffer) {
+          var ul = listView(buffer);
+          head.append(ul);
+          buffer = [];
         }
-        match = match[2] + match[1];
+        return;
       }
-      schwartz[i] = [match, data[i]];
-    }
-    schwartz.sort();
-    schwartz.reverse();
-    for (i = 0; i < data.length; i++) {
-      data[i] = schwartz[i][1];
-    }
-    var head = emptyElement(DATASETHDR);
-    var datasetView = listView(data, liClickHandler(COLUMNHDR),
-      function (elem) {
-        return {
-          title: elem[0],
-          id: JSON.stringify([elem[1], elem[2]])
-        };
-      });
-    head.appendChild(datasetView);
-  }
-  
 
-  function receiveColumn(data) {
-    drawChart(JSON.parse(data[2]));
-  }
-  
+      elementView(contents, liClickHandler(DATASETHDR), buffer);
+
+      if (lastIdent !== ident) {
+        head.empty();
+        head.append(listView(buffer));
+        lastIdent = ident;
+      }
+    };
+  }(-1, []));
+
+
+  var asock = new WebSocket("ws://127.0.0.1:8000/tokenmatcher");
+
+  asock.onopen = function (event) {
+    var input = $("#token_input");
+    input.on('input', sendTokens);
+    console.log("Found server");
+    asock.onmessage = receiveCDIDs;
+  };
+
 
 }());

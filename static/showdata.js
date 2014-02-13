@@ -17,19 +17,24 @@ var drawChart = (function (first) {
     data.addColumn('string', 'Year');
     data.addColumn('number', 'Amount');
 
-    if (first) {
-        first = false;
-    } else {
-        column = column[0];
-    }
+    // if (first) {
+    //     first = false;
+    // } else {
+    //     column = column[0];
+    // }
 
-    for (i = 0; i < column.length && column[i][0].length === 4; i++) {
-      numeric[i] = [column[i][0], parseFloat(column[i][1])];
+    for (i = 0; i < column.length; i++) {
+      try {
+        numeric[i] = [column[i][0], parseFloat(column[i][1])];
+      } catch (e) {
+        numeric[i] = [column[i][0], null];
+      } 
     }
+    console.log(numeric);
     data.addRows(numeric);
 
     // Set chart options
-    var options = {'title': 'Some Graph',
+    var options = {'title': '',
                    'width': 800,
                    'height': 450};
 
