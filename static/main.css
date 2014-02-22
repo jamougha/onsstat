@@ -60,6 +60,7 @@
 }
 .chart {
     width: 850px;
+    margin-bottom: 50px;
 }
 #cdids {
     width: 100%;

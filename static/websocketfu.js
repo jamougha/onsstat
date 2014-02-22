@@ -6,30 +6,29 @@
   var DATASETHDR = 'datasets';
   var COLUMNHDR = 'column';
 
-  function liClickHandler(header) {
-    return (function (currentNode, lastbg) {
-      return function (node) {
-        function doClick() {
-          if (currentNode !== null) {
-            currentNode.style.background = lastbg;
-          }
-          lastbg = node.style.background;
-          node.style.background = "#FFCC88";
-          var data = $.get('/fetchcolumn/' + node.id, function () { drawChart(JSON.parse(data.responseText)[0]) })
-          var selectedNode = node.cloneNode();
-          selectedNode._node = node;
-          selectedNode._data = data;
-          selectedNode.visiblity = 'hidden';
-          console.log(selectedNode._element);
-          $(node).fadeOut(1000);
-          var selectList = $('#chosen');
-          selectList.append(selectedNode);
-          currentNode = node;
-        }
-        return doClick;
-      };
-    }(null, null));
+  
+  var liClickHandler =  function (node) {
+    function doClick() {
+      node.style.background = "#FFCC88";
+
+      var data = $.get('/fetchcolumn/' + node.id, function () { drawChart(JSON.parse(data.responseText)[0]) })
+
+      var selectedNode = node.cloneNode();
+      selectedNode._node = node;
+      selectedNode._data = data;
+      selectedNode.visiblity = 'hidden';
+
+      console.log(selectedNode._element);
+
+      $(node).fadeOut(1000);
+
+      var selectList = $('#chosen');
+      selectList.append(selectedNode);
+      currentNode = node;
   }
+  return doClick;
+};
+  
 
   function listView(buffer) {
     var ul = document.createElement('ul');
@@ -47,7 +46,7 @@
     return ul;
   }
 
-  function elementView(data, handler, buffer) {
+  function elementView(data, buffer) {
     var i, elem, li;
 
     for (i = 0; i < data.length; i++) {
@@ -57,9 +56,10 @@
       li.style.padding = "5px";
       li.textContent = title;
       li.style.borderBottom = 'dotted gray 1px'
+      li.style.marginBottom = '5px';
       li.id = elem.column_id;
       li._element = elem
-      li.onclick = handler(li);
+      li.onclick = liClickHandler(li);
       buffer.push(li);
     }
   }
@@ -74,7 +74,7 @@
     }
 
     if (input.value.length > 1) {
-      var message = input.value;
+      message = input.value;
     }
 
     asock.send(JSON.stringify([++numsent, message]));
@@ -102,7 +102,7 @@
         return;
       }
 
-      elementView(contents, liClickHandler(DATASETHDR), buffer);
+      elementView(contents, buffer);
 
       if (lastIdent !== ident) {
         head.empty();
