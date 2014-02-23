@@ -8,7 +8,7 @@ google.load('visualization', '1.0', {'packages': ['corechart']});
 // Callback that creates and populates a data table,
 // instantiates the pie chart, passes in the data and
 // draws it.
-var drawChart = (function (first) {
+var drawChartOld = (function (first) {
   return function (column) {
     console.log(column.length)
     var i, numeric = [];
@@ -44,4 +44,4 @@ var drawChart = (function (first) {
   };
 }(true));
 
-google.setOnLoadCallback(drawChart);
+google.setOnLoadCallback(drawChartOld);

@@ -1,33 +1,87 @@
 
-// TODO refactor in to mvc
 (function () {
   
   var CDIDHDR = 'cdids';
   var DATASETHDR = 'datasets';
   var COLUMNHDR = 'column';
+  function cmpYears(y1, y2) {
+    return parseInt(y1) - parseInt(y2);
+  }
 
-  
+  function drawChart() {
+    var chosen = $('#chosen').children(), 
+        titles = ['Year'],
+        dateMaps = [], // mappings from date to value for each graph
+        allDates = {},
+        dateList = [],
+        data = undefined,
+        table = [titles],
+        i, j, datecolumn, date, value, row, chart;
+    console.log("foo");
+    for (i = 0; i < chosen.length; i++) {
+      titles.push(chosen[i].innerHTML);
+      dateMaps.push({});
+
+      data = chosen[i]._data[0]; // [0] => by year
+      console.log(data);
+      for (j = 0; j < data.length; j++) {
+        date = data[j][0];
+        value = data[j][1];
+        allDates[date] = true;
+        try {
+          dateMaps[i][date] = parseFloat(value);
+        } catch (e) {
+          dateMaps[i][date] = null;
+        }
+      }
+    }
+
+    for (date in allDates) {
+      dateList.push(date);
+    }
+
+    dateList.sort(cmpYears);
+
+    for (i = 0; i < dateList.length; i++) {
+      date = dateList[i];
+      row = [date];
+      for (j = 0; j < dateMaps.length; j++) {
+        row.push(dateMaps[j][date] || null);
+      }
+      table.push(row);
+    }
+
+    data = google.visualization.arrayToDataTable(table);
+    console.log(table)
+    options = {
+      'title': '',
+      'width': 800,
+      'height': 450
+    };
+
+    chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+    chart.draw(data, options);
+  }
   var liClickHandler =  function (node) {
-    function doClick() {
+    return function () {
       node.style.background = "#FFCC88";
-
-      var data = $.get('/fetchcolumn/' + node.id, function () { drawChart(JSON.parse(data.responseText)[0]) })
 
       var selectedNode = node.cloneNode();
       selectedNode._node = node;
-      selectedNode._data = data;
-      selectedNode.visiblity = 'hidden';
-
-      console.log(selectedNode._element);
 
       $(node).fadeOut(1000);
 
       var selectList = $('#chosen');
       selectList.append(selectedNode);
-      currentNode = node;
-  }
-  return doClick;
-};
+
+
+      var response = $.get('/fetchcolumn/' + node.id, function () {
+        var data = JSON.parse(response.responseText);
+        selectedNode._data = data;
+        drawChart();
+      });
+    };
+  };
   
 
   function listView(buffer) {
@@ -46,22 +100,18 @@
     return ul;
   }
 
-  function elementView(data, buffer) {
-    var i, elem, li;
+  function elementView(elem) {
+    var li = document.createElement("li"),
+        title = elem.name + " (" + elem.cdid + ", " + elem.column_id + ")";
+    li.textContent = title;
+    li.style.padding = "5px";
+    li.style.borderBottom = 'dotted gray 1px';
+    li.style.marginBottom = '5px';
 
-    for (i = 0; i < data.length; i++) {
-      elem = data[i];
-      li = document.createElement("li");
-      var title = elem.name + " (" + elem.cdid + ", " + elem.column_id + ")";
-      li.style.padding = "5px";
-      li.textContent = title;
-      li.style.borderBottom = 'dotted gray 1px'
-      li.style.marginBottom = '5px';
-      li.id = elem.column_id;
-      li._element = elem
-      li.onclick = liClickHandler(li);
-      buffer.push(li);
-    }
+    li.id = elem.column_id;
+    li._element = elem;
+
+    return li
   }
 
   var numsent = 0;
@@ -80,7 +130,10 @@
     asock.send(JSON.stringify([++numsent, message]));
   }
 
-  var receiveCDIDs = (function (lastIdent, buffer) {
+  var receiveCDIDs = (function () {
+    var lastIdent = -1, 
+        buffer = [];
+
     return function (data) {
       var head = $('#cdids');
 
@@ -102,7 +155,11 @@
         return;
       }
 
-      elementView(contents, buffer);
+      for (var i = 0; i < contents.length; i++) {
+        var li = elementView(contents[i])
+        li.onclick = liClickHandler(li);
+        buffer.push(li);
+      }
 
       if (lastIdent !== ident) {
         head.empty();
@@ -110,7 +167,7 @@
         lastIdent = ident;
       }
     };
-  }(-1, []));
+  }());
 
 
   var asock = new WebSocket("ws://127.0.0.1:8000/tokenmatcher");
