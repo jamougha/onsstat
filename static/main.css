@@ -59,7 +59,7 @@
     width: 200px;
 }
 .chart {
-    width: 850px;
+    width: 950px;
     margin-bottom: 50px;
 }
 #cdids {
@@ -69,7 +69,7 @@
 }
 .data {
     width: 60%;
-    margin: 15px 60px;
+    margin: 15px 90px;
     padding: 30px;
     border: dotted gray 1px;
     overflow: hidden;
@@ -79,4 +79,28 @@ ul {
     list-style: none;
     padding-left: 0px;
     padding-start: 0px;
+}
+#chart_div {
+    float: left;
+}
+#chart_ui {
+    text-align: center;
+    float: left;
+    margin-top: 100px;
+    mawgin-left: 30px;
+}
+.ui_elem {
+    padding: 2px;
+    margin: 0px;
+    background: white;
+}
+
+.ui_elem_selected {
+    padding: 2px;
+    margin: 0px;
+    background: #FFCC88;
+}
+
+#ui_chart_scale {
+    margin-top: 20px;
 }

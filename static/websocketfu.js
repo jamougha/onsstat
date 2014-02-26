@@ -1,14 +1,48 @@
 
 (function () {
   
-  var CDIDHDR = 'cdids';
-  var DATASETHDR = 'datasets';
-  var COLUMNHDR = 'column';
-  function cmpYears(y1, y2) {
-    return parseInt(y1) - parseInt(y2);
+  google.load('visualization', '1.0', {'packages': ['corechart']});
+
+  var months = {};
+  var m = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 
+           'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  for (var i = 0; i < m.length; i++) {
+    months[m[i]] = i;
   }
 
-  function drawChart() {
+  function cmpPeriods(t1, t2) {
+    var y1 = parseInt(t1), y2 = parseInt(t2);
+    if (y1 !== y2) {
+      return y1 - y2;
+    }
+    
+    // quarterly data - format '1997 Q3'
+    if (t1.length === 7) {  
+      var q1 = parseInt(t1.substring(6, 7)), 
+          q2 = parseInt(t1.substring(6, 7));
+      return q1 - q2;
+    }
+    
+    if (t1.length !== 8) {
+      throw Exception('invalid date format');
+    }
+    // monthly data - format '1997 JAN'
+    var m1 = t1.substring(5, 8), 
+        m2 = t1.substring(5, 8);
+    return months[m1] - months[m2];
+  }
+
+  function Chart() {
+    this.scale = 'linear';
+    this.period = 'yearly';
+    this.periods = {
+      yearly: 0,
+      quarterly: 1,
+      monthly: 2
+    }
+  }
+
+  Chart.prototype.draw = function () {
     var chosen = $('#chosen').children(), 
         titles = ['Year'],
         dateMaps = [], // mappings from date to value for each graph
@@ -17,13 +51,13 @@
         data = undefined,
         table = [titles],
         i, j, datecolumn, date, value, row, chart;
-    console.log("foo");
+
     for (i = 0; i < chosen.length; i++) {
       titles.push(chosen[i].innerHTML);
       dateMaps.push({});
 
-      data = chosen[i]._data[0]; // [0] => by year
-      console.log(data);
+      data = chosen[i]._data[this.periods[this.period]]; // [0] => by year
+      console.log(this.period)
       for (j = 0; j < data.length; j++) {
         date = data[j][0];
         value = data[j][1];
@@ -39,8 +73,7 @@
     for (date in allDates) {
       dateList.push(date);
     }
-
-    dateList.sort(cmpYears);
+    dateList.sort(cmpPeriods);
 
     for (i = 0; i < dateList.length; i++) {
       date = dateList[i];
@@ -52,37 +85,50 @@
     }
 
     data = google.visualization.arrayToDataTable(table);
-    console.log(table)
+    var log = this.scale === 'logarithmic';
     options = {
       'title': '',
       'width': 800,
-      'height': 450
+      'height': 450,
+      vAxis: { 
+        logScale: log
+      }
     };
 
     chart = new google.visualization.LineChart(document.getElementById('chart_div'));
     chart.draw(data, options);
-  }
-  var liClickHandler =  function (node) {
-    return function () {
-      node.style.background = "#FFCC88";
-
-      var selectedNode = node.cloneNode();
-      selectedNode._node = node;
-
-      $(node).fadeOut(1000);
-
-      var selectList = $('#chosen');
-      selectList.append(selectedNode);
-
-
-      var response = $.get('/fetchcolumn/' + node.id, function () {
-        var data = JSON.parse(response.responseText);
-        selectedNode._data = data;
-        drawChart();
-      });
-    };
   };
-  
+  Chart.prototype.setScale = function (scale) {
+    this.scale = scale;
+  };
+
+  Chart.prototype.setPeriod = function (period) {
+    this.period = period;
+  }
+  var chart = new Chart();
+  /* cdid data is viewed as an unordered list. These functions
+     create the list and the elements from the data and handle 
+     the styling.
+  */
+
+  function styleElem(li) {
+    li.style.padding = "5px";
+    li.style.borderBottom = 'dotted gray 1px';
+    li.style.marginBottom = '5px';
+    li.style.background = 'white';
+  }
+
+  function elementView(elem) {
+    var li = document.createElement("li"),
+        title = elem.name + " [" + elem.cdid + "]";
+
+    li.textContent = title;
+    li.id = elem.column_id;
+    
+    styleElem(li);
+
+    return li
+  }
 
   function listView(buffer) {
     var ul = document.createElement('ul');
@@ -100,25 +146,49 @@
     return ul;
   }
 
-  function elementView(elem) {
-    var li = document.createElement("li"),
-        title = elem.name + " (" + elem.cdid + ", " + elem.column_id + ")";
-    li.textContent = title;
-    li.style.padding = "5px";
-    li.style.borderBottom = 'dotted gray 1px';
-    li.style.marginBottom = '5px';
+  /* when a cdid is plotted, a dom element to represent it is 
+     created and inserted into a list; this handles the user
+     removing the cdid from the plot.
+  */
+  function selectedLiClickHandler(node) {
+    return function() {
+      $(node._node).fadeIn(1000);
+      styleElem(node._node);
 
-    li.id = elem.column_id;
-    li._element = elem;
-
-    return li
+      $(node).fadeOut(1000).delay(1000).remove();
+      chart.draw();
+    };
   }
 
-  var numsent = 0;
+
+  function liClickHandler(node) {
+    return function () {
+      node.style.background = "#FFCC88";
+
+      var selectedNode = node.cloneNode();
+      selectedNode._node = node;
+      selectedNode.onclick = selectedLiClickHandler(selectedNode);
+      $(node).fadeOut(1000);
+
+      var selectList = $('#chosen');
+      selectList.append(selectedNode);
+
+
+      var response = $.get('/fetchcolumn/' + node.id, function () {
+        var data = JSON.parse(response.responseText);
+        selectedNode._data = data;
+        chart.draw();
+      });
+    };
+  }
+  
+
   function sendTokens(event) {
     var input = document.getElementById("token_input"),
         message = false;
-
+    if (!this.numsent) {
+      this.numsent = 0;
+    }
     if (input.value === "") {
       $('#cdids').empty();
     }
@@ -127,7 +197,7 @@
       message = input.value;
     }
 
-    asock.send(JSON.stringify([++numsent, message]));
+    asock.send(JSON.stringify([++this.numsent, message]));
   }
 
   var receiveCDIDs = (function () {
@@ -141,7 +211,7 @@
       var ident = message[0];
       var contents = message[1];
 
-      if (ident < numsent) {
+      if (ident < sendTokens.numsent) {
         buffer = [];
         return;
       }
@@ -175,9 +245,31 @@
   asock.onopen = function (event) {
     var input = $("#token_input");
     input.on('input', sendTokens);
-    console.log("Found server");
     asock.onmessage = receiveCDIDs;
   };
 
+  function uiSelector(list, elem, setter) {
+    return function () {
+      elements = $(list).children();
+      for (var i = 0; i < elements.length; i++) {
+        elements[i].className = 'ui_elem';
+      }
+      elem.className = 'ui_elem_selected';
+      setter(elem.id);
+      chart.draw();
+    }
+  }
+
+  function initUiList (list, callback) {
+    var elements = list.children();
+    for (var i = 0; i < elements.length; i++) {
+      elements[i].onclick = uiSelector(list, elements[i], callback);
+    }
+
+  }
+  $(document).ready( function () {
+    initUiList($('#ui_time_period'), function (z) { chart.setPeriod(z); } );
+    initUiList($('#ui_chart_scale'), function (z) { chart.setScale(z); });
+  });
 
 }());
