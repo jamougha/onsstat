@@ -104,3 +104,9 @@ ul {
 #ui_chart_scale {
     margin-top: 20px;
 }
+#toolTip{
+    padding:5px;
+    background-color: #577FAF;
+    display:none;
+    position:absolute;
+}

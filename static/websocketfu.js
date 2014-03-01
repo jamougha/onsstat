@@ -1,6 +1,6 @@
 
 (function () {
-  
+  DEBUG = true;
   google.load('visualization', '1.0', {'packages': ['corechart']});
 
   var months = {};
@@ -32,6 +32,7 @@
     return months[m1] - months[m2];
   }
 
+
   function Chart() {
     this.scale = 'linear';
     this.period = 'yearly';
@@ -39,13 +40,22 @@
       yearly: 0,
       quarterly: 1,
       monthly: 2
-    }
+    };
+
+    this.options = {
+      'title': '',
+      'width': 800,
+      'height': 450,
+      vAxis: { 
+        logScale: false
+      }
+    };
   }
 
   Chart.prototype.draw = function () {
     var chosen = $('#chosen').children(), 
         titles = ['Year'],
-        dateMaps = [], // mappings from date to value for each graph
+        dateMaps = [], // mappings from date to value for each plot
         allDates = {},
         dateList = [],
         data = undefined,
@@ -57,7 +67,6 @@
       dateMaps.push({});
 
       data = chosen[i]._data[this.periods[this.period]]; // [0] => by year
-      console.log(this.period)
       for (j = 0; j < data.length; j++) {
         date = data[j][0];
         value = data[j][1];
@@ -85,27 +94,50 @@
     }
 
     data = google.visualization.arrayToDataTable(table);
-    var log = this.scale === 'logarithmic';
-    options = {
-      'title': '',
-      'width': 800,
-      'height': 450,
-      vAxis: { 
-        logScale: log
-      }
-    };
+    this.options.vAxis.logScale = this.scale === 'logarithmic';
 
     chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-    chart.draw(data, options);
+    chart.draw(data, this.options);
   };
+
+  // init cretes the default view of the chart before the
+  // user selects data to plot
+  Chart.prototype.init = function(column) {
+    var i, numeric = [];
+
+    var data = new google.visualization.DataTable();
+    data.addColumn('string', 'Year');
+    data.addColumn('number', 'Amount');
+
+    for (i = 0; i < column.length; i++) {
+      numeric[i] = [column[i][0], parseFloat(column[i][1])];
+    }
+
+    data.addRows(numeric);
+
+    var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+    chart.draw(data, this.options);
+  };
+
   Chart.prototype.setScale = function (scale) {
+    if (DEBUG && scale !== 'logarithmic' && scale !== 'linear') {
+      console.log('invalid chart scale ' + scale);
+    }
     this.scale = scale;
   };
 
   Chart.prototype.setPeriod = function (period) {
+    if (DEBUG && !(period in this.periods)) {
+      console.log('error: invalid time period ' + period);
+    }
     this.period = period;
-  }
+  };
+
   var chart = new Chart();
+  google.setOnLoadCallback(function (c) { chart.init(c); });
+
+
+
   /* cdid data is viewed as an unordered list. These functions
      create the list and the elements from the data and handle 
      the styling.
