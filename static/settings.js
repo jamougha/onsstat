@@ -1,4 +1,4 @@
 ukstatSettings = {
-    debug: true,
-    wsServer: "ws://127.0.0.1:8000"
+    debug: false,
+    wsServer: "ws://81.4.106.251"
 }
