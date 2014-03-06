@@ -4,12 +4,15 @@ from flask_sockets import Sockets
 import namematch
 import json 
 import mydb
-import datacache
+from datacache import cache
 from concurrent.futures import ThreadPoolExecutor
+from flask.ext.sqlalchemy import SQLAlchemy
 import time
 import itertools as it
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://holdem:holdem@127.0.0.1/onsstat'
+db = SQLAlchemy(app)
 sockets = Sockets(app)
 
 @app.route('/fetchcolumn/<column_id>')
@@ -31,7 +34,6 @@ def echo_socket(ws):
     query if one is found.
     """
     matcher = namematch.get_matcher()
-    cache = datacache.cache()
 
     with ThreadPoolExecutor(max_workers=2) as ex:
         received = ex.submit(ws.receive)

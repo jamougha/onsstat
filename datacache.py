@@ -7,7 +7,7 @@ _DB_CONNECT_STR = "dbname=onsstat user=holdem password=holdem host=127.0.0.1"
 
 class Datacache(object):
     """Cache the dataset and id info from reduced_columns for each cdid.
-    This allows us to do fast searching during the client's live search
+    This allows us to do fast live search.
     """
     def __init__(self, db):
         self._cdid_data = defaultdict(list)
@@ -50,7 +50,5 @@ class Datacache(object):
 
         return columns
 
-_cache = Datacache(_DB_CONNECT_STR)
-def cache():
-    return _cache
+cache = Datacache(_DB_CONNECT_STR)
 
