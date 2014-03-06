@@ -1,6 +1,8 @@
 
 (function () {
-  DEBUG = true;
+  DEBUG = ukstatSettings.debug;
+  WEBSOCK_SERVER = ukstatSettings.wsServer + "/tokenmatcher";
+
   google.load('visualization', '1.0', {'packages': ['corechart']});
 
   var MONTHS = {
@@ -136,12 +138,20 @@
     if (DEBUG) {
       console.log(data);
     }
+
+    for (var i = 0; i < this.chosen.length; i++) {
+        if (this.chosen[i].id == id) {
+            return;
+        }
+    }
+
     this.chosen.push({ 
       colour: this.colours.pop() || '#000000',
       name: name,
       id: id,
       data: data
     });
+
     this.draw();
   }
 
@@ -393,8 +403,10 @@
 
   var asock;
   $(document).ready( function () {
-    asock = new WebSocket("ws://127.0.0.1:8000/tokenmatcher");
-
+    asock = new WebSocket(WEBSOCK_SERVER);
+    asock.onclose = function(event) {
+        console.log(event);
+    }
     asock.onopen = function (event) {
 
       var input = document.getElementById("token_input");
