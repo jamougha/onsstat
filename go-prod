@@ -1,3 +1,4 @@
 #!/bin/bash
 
+git checkout production
 authbind gunicorn -b 81.4.106.251:80 -k flask_sockets.worker --error-logfile 'err.txt' webapp:app
