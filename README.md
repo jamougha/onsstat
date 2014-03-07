@@ -30,7 +30,7 @@ Code Structure
 
 * webapp.py
 
--- This is the central flask application. It serves static pages, data for plotting in a 
+This is the central flask application. It serves static pages, data for plotting in a 
 REST manner, and serves the websocket links for live-search.
 
 * namematch.py
