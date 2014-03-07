@@ -64,6 +64,11 @@ def echo_socket(ws):
 def about():
     return render_template('about.html')
 
+
+@app.route('/sorry')
+def sorry():
+    return render_template('sorry.html')
+
 @app.route('/')
 def hello():
     return render_template('datasets.html')
