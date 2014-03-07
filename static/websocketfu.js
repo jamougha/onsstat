@@ -221,7 +221,7 @@
   function styleElem(li) {
     li.style.padding = "5px";
     li.style.borderBottom = 'dotted gray 1px';
-    li.style.marginBottom = '5px';
+    li.style.marginBottom = '10px';
     li.style.background = 'white';
   }
 
@@ -231,6 +231,7 @@
 
     li.textContent = title;
     li.id = elem.column_id;
+    li.title = elem.datasets.join("\n");
     
     styleElem(li);
 
@@ -249,7 +250,6 @@
     for (i = 0; i < buffer.length; i++) {
       $(ul).append(buffer[i]);
     }
-
     return ul;
   }
 
@@ -328,7 +328,7 @@
 
      The data is rendered into an ordered list by the functions above.
 
-     Unfortunately there responses may have thousands of elements and 
+     Unfortunately responses may have thousands of elements and 
      queries may take significant fractions of a second to process, so
      to achieve responsive live-search the strategy is:
 
@@ -351,6 +351,7 @@
 
       if (ident < sendTokens.numsent) {
         buffer = [];
+        console.log("wat");
         return;
       }
 
@@ -360,6 +361,7 @@
           head.append(ul);
           buffer = [];
         }
+        console.log("wat");
         return;
       }
 
@@ -400,9 +402,11 @@
 
   }
 
-
+  /* Initialization on loading of the page */
   var asock;
   $(document).ready( function () {
+    //$(document).tooltip();
+
     asock = new WebSocket(WEBSOCK_SERVER);
     asock.onclose = function(event) {
         console.log(event);
@@ -410,6 +414,7 @@
     asock.onopen = function (event) {
 
       var input = document.getElementById("token_input");
+      $(input).focus();
       if (DEBUG) {
         console.log('opened websocket');
         console.log(input);
