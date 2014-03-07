@@ -2,7 +2,7 @@
 
 {% block title %}ONS Datasets{% endblock %}
 {% block content %}
-      <div class="content">
+    <div class="content">
         <h2>ONS Datasets</h2>
         <div class="chart">
             <div id = "chart_div"></div>
@@ -22,13 +22,15 @@
                     <li class = "ui_elem" id = "logarithmic">Logarithmic</li>
                 </ul>
             </div>
-            <div class="input"><input id = "token_input"  /></div>
                        
         </div>    
+        <div class="inputData">
+        <div class="input"><input id = "token_input"  /></div>
 
-        <div class="data">
-            <ul id = "chosen"></ul>
-            <div class="datacolumn" id="cdids"><ul></ul></div>
+            <div class="data">
+                <ul id = "chosen"></ul>
+                <div class="datacolumn" id="cdids"><ul></ul></div>
+            </div>
         </div>
-      </div>
+    </div>
 {% endblock %}

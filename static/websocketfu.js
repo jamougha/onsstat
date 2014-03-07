@@ -221,7 +221,7 @@
   function styleElem(li) {
     li.style.padding = "5px";
     li.style.borderBottom = 'dotted gray 1px';
-    li.style.marginBottom = '5px';
+    li.style.marginBottom = '10px';
     li.style.background = 'white';
   }
 

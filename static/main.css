@@ -58,18 +58,20 @@
     margin: 10px auto 0px auto;
     width: 200px;
 }
+.inputData {
+    width: 662px;
+    margin-left: 55px;
+}
 .chart {
     width: 950px;
     margin-bottom: 50px;
 }
 #cdids {
-    width: 100%;
     float: left;
     list-style: None;
 }
 .data {
-    width: 60%;
-    margin: 15px 90px;
+    margin: 15px 0px;
     padding: 30px;
     border: dotted gray 1px;
     overflow: hidden;
