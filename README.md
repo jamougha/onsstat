@@ -7,7 +7,7 @@ What Does it Do?
 ================
 
 The ONS has an extensive set of wonderful [datasets](http://www.ons.gov.uk/ons/datasets-and-tables/index.html?content-type=Dataset&pubdateRangeType=allDates&sortBy=pubdate&sortDirection=DESCENDING&newquery=*&pageSize=50&applyFilters=true&content-type-orig=%22Dataset%22+OR+content-type_original%3A%22Reference+table%22) covering a wide range
-of economic and social data. Unfortunately, there was way to easily search or 
+of economic and social data. Unfortunately, there was no easy way to search or 
 view this data. Searching for 'unemployment wales' would return a large number of
 datasets but no information about the individual data they contained. Data on, for 
 instance, manufacturing might be indexed by 'manufacturing' or perhaps simply 'manuf',
