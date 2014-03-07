@@ -30,33 +30,33 @@ Code Structure
 
 * webapp.py
 
---* This is the central flask application. It serves static pages, data for plotting in a 
+-- This is the central flask application. It serves static pages, data for plotting in a 
 REST manner, and serves the websocket links for live-search.
 
 * namematch.py
 
---* Implements a suffix tree for live-search of CDID names. Also initializes the suffix tree
+Implements a suffix tree for live-search of CDID names. Also initializes the suffix tree
 from the database and presents an object-oriented interface for searching the tree, 
 including ordering of results.
 
 
 * datacache.py
 
---* Object-oriented cache for data (perhaps you guessed that one) needed by live search for each CDID.
+Object-oriented cache for data (perhaps you guessed that one) needed by live search for each CDID.
 
 * static/datasets.js
 
---* Implements the clientside interface for querying the backend and logic to render and plot the 
+Implements the clientside interface for querying the backend and logic to render and plot the 
 resulting data.
 
 * mydb.py
 
---* Handles some common database interaction.
+Handles some common database interaction.
 
 *csv data parsing.ipynb
 
---* An ipython notebook for parsing the raw datasets and updating the database.
+An ipython notebook for parsing the raw datasets and updating the database.
 
 * ons-retrieval.py
 
---* Retrieves the datasets from the ONS website.
+Retrieves the datasets from the ONS website.
