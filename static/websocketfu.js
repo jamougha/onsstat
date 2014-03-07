@@ -71,7 +71,6 @@
     // colours so that the order they're used in
     // doesn't change 
     this.COLOURS = this.colours.slice(0);
-    console.log(this.COLOURS);
 
     // The data to be plotted, and also its id and name
     this.chosen = [];
@@ -157,7 +156,6 @@
 
   Chart.prototype.remove = function (id) {
     for (var i = 0; i < this.chosen.length; i++) {
-      console.log(this.COLOURS);
       if (this.chosen[i].id === id) {
         var colour = this.chosen[i].colour;
         var COLOURS = this.COLOURS;
@@ -351,7 +349,6 @@
 
       if (ident < sendTokens.numsent) {
         buffer = [];
-        console.log("wat");
         return;
       }
 
@@ -361,7 +358,6 @@
           head.append(ul);
           buffer = [];
         }
-        console.log("wat");
         return;
       }
 
