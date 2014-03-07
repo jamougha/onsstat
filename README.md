@@ -53,7 +53,7 @@ resulting data.
 
 Handles some common database interaction.
 
-*csv data parsing.ipynb
+* csv data parsing.ipynb
 
 An ipython notebook for parsing the raw datasets and updating the database.
 
