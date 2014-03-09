@@ -53,18 +53,17 @@ class TokenMatcher(object):
     """Singleton used by the the back-end for search functionality.
      Finds cdids matching the tokens given to match_tokens
     """
-    def __init__(self):
-        cdids = mydb.db_get('select cdid, name from cdids')
-        self._cdid_names = {cdid:name for cdid, name in cdids}
+    def __init__(self, cdid_table):
+        cdids = cdid_table.query.all()
+        self._cdid_names = {cdid.cdid:cdid.name for cdid in cdids}
         tokenized = [(cdid, tokenize(name))
                      for cdid, name in self._cdid_names.items()]
         self._suffixtree = STree(tokenized)
 
     def match_tokens(self, tokens):
         """Find cdids with names that match the tokens.
-        All tokens must be matched. Exact matches are prioritized
-        over suffix matches.
-        TODO: write tests
+           All tokens must be matched. Exact matches are prioritized
+           over suffix matches.
         """
         if len(tokens) > 10:
             tokens = tokens[:10]
@@ -72,13 +71,16 @@ class TokenMatcher(object):
             return [(tokens[0], self._cdid_names[tokens[0]])]
             
         matches_by_token = [self._suffixtree.find(token) for token in tokens]
-        matching_all = reduce(lambda x, y: x & y, [a | b for a, b in matches_by_token])
-        exacts_matches = [a for a, _ in matches_by_token]
-        matching_all = sorted(matching_all,
-                         key=lambda x: (sum(1 for s in exacts_matches if x in s), x),
-                         reverse=True)
-        return [(cdid, self._cdid_names[cdid]) for cdid in matching_all]
+        all_matches_by_token = [a | b for a, b in matches_by_token]
+        all_matches = reduce(lambda x, y: x & y, all_matches_by_token)
 
-_matcher = TokenMatcher()
-def get_matcher():
-    return _matcher
+        # order the results by how many times a token was matched exactly
+        exacts_matches_by_token = [a for a, _ in matches_by_token]
+        def match_ordering(match):
+            exact_match_count = sum(1 for matches in exacts_matches_by_token 
+                                      if match in matches)
+            return (exact_match_count, match)
+
+        matches = sorted(all_matches, key=match_ordering, reverse=True)
+
+        return [(cdid, self._cdid_names[cdid]) for cdid in matches]
