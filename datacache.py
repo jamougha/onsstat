@@ -1,6 +1,5 @@
 import psycopg2
 from collections import defaultdict
-
 _DB_CONNECT_STR = "dbname=onsstat user=holdem password=holdem host=127.0.0.1"
 
 
@@ -9,24 +8,16 @@ class Datacache(object):
     """Cache the dataset and id info from reduced_columns for each cdid.
     This allows us to do fast live search.
     """
-    def __init__(self, db):
+    def __init__(self, datasets, rcolumns):
         self._cdid_data = defaultdict(list)
         self._dataset_titles = {}
-        try:
-            conn = psycopg2.connect(db)
-            cur = conn.cursor() 
+        self.datasets = datasets
+        self.rcolumns = rcolumns
+        datasets = self.datasets.query.all()
+        self._dataset_titles = {d.id:d.title for d in datasets}
 
-            cur.execute('select id, title from datasets')
-            datasets = cur.fetchall()
-            self._dataset_titles = {id:title for id, title in datasets}
-
-            cur.execute('select cdid, datasets, id from reduced_columns')
-            for cdid, datasets, d_id in cur.fetchall():
-                self._cdid_data[cdid].append((datasets, d_id))
-
-        finally:
-            cur.close()
-            conn.close()
+        for c in self.rcolumns.query.all():
+            self._cdid_data[c.cdid].append((c.datasets, c.id))
 
     def dataset_title(self, d_id):
         return self._dataset_titles[d_id]
@@ -50,5 +41,4 @@ class Datacache(object):
 
         return columns
 
-cache = Datacache(_DB_CONNECT_STR)
 
