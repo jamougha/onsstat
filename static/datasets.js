@@ -76,60 +76,78 @@
     this.chosen = [];
   }
 
-  Chart.prototype.draw = function () {
-    //TODO: refactor with less spaghetti
-    var titles = ['Year'],
-        dateMaps = [], // mappings from date to value for each plot
-        allDates = {},
-        dateList = [],
-        data = undefined,
-        table = [titles],
-        i, j, datecolumn, date, value, row, chart;
+  /* some support functions for the draw method */
 
-    if (DEBUG) {
-      console.log('drawing');
-    }
-
-    for (i = 0; i < this.chosen.length; i++) {
-      titles.push(this.chosen[i].name);
-      dateMaps.push({});
-
-      var periodIdx = this.PERIODS[this.period]
-      data = this.chosen[i].data[periodIdx]; 
-      for (j = 0; j < data.length; j++) {
-        date = data[j][0];
-        value = data[j][1];
-        allDates[date] = true;
-        try {
-          dateMaps[i][date] = parseFloat(value);
-        } catch (e) {
-          dateMaps[i][date] = null;
-        }
+  // extract all the dates from the table into an object
+  function tableToDateset(table, period) {
+    var dateSet = {};
+    for (var i = 0; i < table.length; i++) {
+      var data = table[i].data[period];
+      for (var j = 0; j < data.length; j++) {
+        dateSet[data[j][0]] = true;
       }
     }
 
-    for (date in allDates) {
-      dateList.push(date);
+    return dateSet;
+  }
+
+  // turn an array of (date, value) pairs into a map of { date: value }
+  function toDateMap(column) {
+    var dateMap = {};
+    for (var i = 0; i < column.length; i++) {
+      var date = column[i][0];
+      var value = column[i][1];
+      try {
+        dateMap[date] = parseFloat(value);
+      } catch (e) {
+        dateMap[date] = null;
+      }
     }
+
+    return dateMap;
+  }
+
+  Chart.prototype.draw = function () {
+    // Each column of data has three arrays for annual, monthly and quarterly 
+    // data; find the index of the one we want
+    var periodIdx = this.PERIODS[this.period];
+
+    // extract all the dates for all columns in the data to be plotted,
+    // then sort them to get the date-range of the x axis
+    var dateSet = tableToDateset(this.chosen, periodIdx);
+    var dateList = Object.keys(dateSet);
     dateList.sort(cmpPeriods);
 
-    for (i = 0; i < dateList.length; i++) {
-      date = dateList[i];
-      row = [date];
-      for (j = 0; j < dateMaps.length; j++) {
-        row.push(dateMaps[j][date] || null);
+    // turn each column of (date, value) pairs into an object 
+    // of form { date: value, .. }. 
+    var dateMaps = this.chosen.map(function (column) {
+      return toDateMap(column.data[periodIdx]);
+    });
+
+    // gChart api expects the first row of our table to be a list of
+    // the names of the columns
+    var titles = ["Year"];
+    for (i = 0; i < this.chosen.length; i++) {
+      titles.push(this.chosen[i].name);
+    }
+    var table = [titles];
+
+    dateList.map(function (date) {
+      var row = [date];
+      for (var j = 0; j < dateMaps.length; j++) {
+        row.push(dateMaps[j][date] || null); // gChart will display gaps on nulls
       }
       table.push(row);
-    }
+    });
 
     this.options.colors = this.chosen.map(function (line) {
       return line.colour;
     });
 
-    data = google.visualization.arrayToDataTable(table);
+    var data = google.visualization.arrayToDataTable(table);
     this.options.vAxis.logScale = this.scale === 'logarithmic';
 
-    chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+    var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
     chart.draw(data, this.options);
   };
 
@@ -139,9 +157,9 @@
     }
 
     for (var i = 0; i < this.chosen.length; i++) {
-        if (this.chosen[i].id == id) {
-            return;
-        }
+      if (this.chosen[i].id == id) {
+        return;
+      }
     }
 
     this.chosen.push({ 
@@ -154,26 +172,32 @@
     this.draw();
   }
 
+  Chart.prototype.freeColour = function (colour) {
+    var COLOURS = this.COLOURS;
+    if (colour != '#000000') {
+      this.colours.push(colour);
+      this.colours.sort(function (c1, c2) {
+        return COLOURS.indexOf(c1) - COLOURS.indexOf(c2);
+      });
+    }
+  };
+
   Chart.prototype.remove = function (id) {
     for (var i = 0; i < this.chosen.length; i++) {
       if (this.chosen[i].id === id) {
         var colour = this.chosen[i].colour;
         var COLOURS = this.COLOURS;
-        if (colour != '#000000') {
-          this.colours.push(colour);
-          this.colours.sort(function (c1, c2) {
-            return COLOURS.indexOf(c1) - COLOURS.indexOf(c2);
-          });
-        }
+        this.freeColour(colour);
         this.chosen.splice(i, 1);
-        this.draw();
-        return;
       }
     }
+    this.draw();
+
     if (DEBUG) {
       console.log('remove from chart failed due to invalid id ' + id);
     }
-  }
+  };
+
   // init cretes the default view of the chart before the
   // user selects data to plot
   Chart.prototype.init = function(column) {
@@ -217,6 +241,8 @@
      the styling.
   */
   function styleElem(li) {
+    // Can't do styling with CSS because jQuery fadeout changes styling
+    // so it needs to be reset when fading back in
     li.style.padding = "5px";
     li.style.borderBottom = 'dotted gray 1px';
     li.style.marginBottom = '10px';
@@ -229,7 +255,7 @@
 
     li.textContent = title;
     li.id = elem.column_id;
-    li.title = elem.datasets.join("\n");
+    li.title = "";//elem.datasets.join("\n");
     
     styleElem(li);
 
@@ -251,9 +277,10 @@
     return ul;
   }
 
-  /* when a cdid is plotted, a dom element to represent it's 
-     created and inserted into a list; this handles the user
-     removing the cdid from the plot.
+  /* when a cdid is plotted, a dom element to represent it is 
+     created and inserted into a list.
+     This callback handles the user clicking that element by removing
+     that cdid from the plot.
   */
   function selectedLiClickHandler(node) {
     return function() {
@@ -293,18 +320,17 @@
      via websockets. Needs to be registered as a handler for input
      events on the input box.
   */
+    // numsent is used by the server as a kind of response header.
+    // If we receive a response with an out-of-date numsent it can
+    // be discarded.
+  var numsent = 0
   function sendTokens(event) {
     var input = document.getElementById("token_input"),
         message = false;
     if (DEBUG) {
       console.log('sending tokens');
     }
-    // numsent is used by the server as a kind of response header.
-    // If we receive a response with an out-of-date numsent it can
-    // be discarded.
-    if (!this.numsent) {
-      this.numsent = 0;
-    }
+
     if (input.value === "") {
       $('#cdids').empty();
     }
@@ -313,10 +339,26 @@
       message = input.value;
     }
 
-    asock.send(JSON.stringify([++this.numsent, message]));
-
+    asock.send(JSON.stringify([++numsent, message]));
   }
 
+  /* Utilities for receiveCDIDs 
+     Could refactor this to OO-style
+  */  
+  function showBuffer(buffer) {
+    var head = $('#cdids');
+    head.empty();
+    head.append(listView(buffer));
+  }
+
+  function addToBuffer(data, buffer) {
+    data.map(function (elem) {
+      var li = elementView(elem);
+      li.onclick = liClickHandler(li);
+      buffer.push(li);
+    });
+  }
+  
   /* Callback for websocket responses from the server. 
 
      The response consists of a cdid, an id for the associated 
@@ -341,37 +383,35 @@
         buffer = [];
 
     return function (data) {
-      var head = $('#cdids');
-
       var message = JSON.parse(data.data);
       var ident = message[0];
       var contents = message[1];
-
-      if (ident < sendTokens.numsent) {
+      
+      // ignore out-of-date messages
+      if (ident < numsent) {
+        return;
+      }
+      
+      // if we've received all the data, render the buffer
+      if (contents === 'end') {
+        showBuffer(buffer);
         buffer = [];
         return;
       }
-
-      if (contents === 'end') {
-        if (buffer) {
-          var ul = listView(buffer);
-          head.append(ul);
+      
+      // when we get the first message back from a query, dump accumulated
+      // data from the buffer and render the new message to screen.
+      if (lastIdent < ident) {
           buffer = [];
-        }
+        addToBuffer(contents, buffer);
+        showBuffer(buffer);
+        lastIdent = ident;
         return;
       }
 
-      for (var i = 0; i < contents.length; i++) {
-        var li = elementView(contents[i])
-        li.onclick = liClickHandler(li);
-        buffer.push(li);
-      }
-
-      if (lastIdent !== ident) {
-        head.empty();
-        head.append(listView(buffer));
-        lastIdent = ident;
-      }
+      // otherwise accumelate data from the query in the buffer 
+      // to be rendered at a later time.
+      addToBuffer(contents, buffer);
     };
   }());
 
