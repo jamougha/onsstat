@@ -87,7 +87,7 @@ class TokenMatcher(object):
         def match_ordering(match):
             exact_match_count = sum(1 for matches in exacts_matches_by_token 
                                       if match in matches)
-            return (exact_match_count, match)
+            return (exact_match_count, -len(self._cdid_names[match]))
 
         matches = sorted(all_matches, key=match_ordering, reverse=True)
 
