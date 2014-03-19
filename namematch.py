@@ -34,8 +34,16 @@ class STree(object):
         return (set(), set())
 
     def _getall(self):
-        gachildren = [child._getall() for child in self._children.values()]
-        return reduce(lambda x, y: x | y, gachildren, self._cdids)
+        childCdids = set(self._cdids)
+        for child in self._children.values():
+            child._getall_fillset(childCdids)
+
+        return childCdids
+
+    def _getall_fillset(self, cdids):
+        cdids |= self._cdids
+        for child in self._children.values():
+            child._getall_fillset(cdids)
 
     def _insert(self, cdid, tokens):
         for token in tokens:
