@@ -28,7 +28,7 @@ class Datacache(object):
     def titles_and_ids(self, cdid):
         result = []
         for datasets, d_id in self.cdid_info(cdid):
-            titles = map(self.dataset_title, datasets)
+            titles = [self._dataset_titles[id] for id in datasets]
             result.append((titles, d_id))
         return result
 
